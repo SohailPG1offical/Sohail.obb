@@ -1,7 +1,6 @@
-
 -- ============================================================
 -- LUA EXPIRY SETTINGS
--- Change these values to set your own expiry date/time.
+-- Change ONLY these values to set your expiry date/time.
 -- Format: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
 -- ============================================================
 local EXPIRY_YEAR   = 2026
@@ -24,24 +23,6 @@ local function IsLuaExpired()
 end
 
 if IsLuaExpired() then
-    local expiryMessage = "Lua has been expired please renew your license OWNER_TELEGRAM_@SohailPG1"
-
-    -- Try common in-game notification APIs without breaking the script
-    -- if a particular runtime does not expose one.
-    pcall(function()
-        if type(ShowToast) == "function" then
-            ShowToast(expiryMessage)
-        elseif type(Toast) == "function" then
-            Toast(expiryMessage)
-        elseif type(ShowMessage) == "function" then
-            ShowMessage(expiryMessage)
-        elseif type(PrintMessage) == "function" then
-            PrintMessage(expiryMessage)
-        else
-            print(expiryMessage)
-        end
-    end)
-
     return
 end
 -- ============================================================
@@ -867,7 +848,6 @@ local GLOBAL_CONNECTIONS = {
 -- ========================================== 
 _G.GTLMODConfig = _G.GTLMODConfig or { 
     AutoHead = false, 
-    HeadShot200x = false,
     EspVip = false, 
     EspDistance = true, 
     EspVipPro = false, 
@@ -1928,22 +1908,6 @@ function _G.InitModMenuTab()
             { Key = "ModMenu_BlackSky", UI = AliasMap.Switcher, Text = "BLACK SKY", GetFunc = function() return _G.GTLMODConfig.BlackSky end, SetFunc = function(c,v) _G.GTLMODConfig.BlackSky = v return true end },
             { Key = "ModMenu_RemoveFog", UI = AliasMap.Switcher, Text = "REMOVE FOG", GetFunc = function() return _G.GTLMODConfig.RemoveFog end, SetFunc = function(c,v) _G.GTLMODConfig.RemoveFog = v return true end },
         }
--- ==================== 🎯 200X HEADSHOT (SECTION) ====================
-local StackHeadshot200x = {
-    { Key = "ModMenu_HS200x_Main", UI = AliasMap.TitleSwitcher, Text = "🎯 200X HEADSHOT HITBOX", ExpandIndex = 0, GetFunc = function() return _G.GTLMODConfig.HeadShot200x end, SetFunc = function(c,v) 
-        _G.GTLMODConfig.HeadShot200x = v
-        if v then
-            NotifyMod("🎯 200X HEADSHOT ACTIVATED")
-        else
-            NotifyMod("200X HEADSHOT DEACTIVATED")
-        end
-        return true 
-    end },
-    { Key = "ModMenu_HS200x_Info1", UI = AliasMap.Switcher, Text = "   Auto Aim - Head Lock", GetFunc = function() return _G.GTLMODConfig.HeadShot200x end, SetFunc = function(c,v) return true end },
-    { Key = "ModMenu_HS200x_Info2", UI = AliasMap.Switcher, Text = "   Hit Box 12x Enlarged", GetFunc = function() return _G.GTLMODConfig.HeadShot200x end, SetFunc = function(c,v) return true end },
-    { Key = "ModMenu_HS200x_Info3", UI = AliasMap.Switcher, Text = "   Perfect Accuracy (No Spread)", GetFunc = function() return _G.GTLMODConfig.HeadShot200x end, SetFunc = function(c,v) return true end },
-    { Key = "ModMenu_HS200x_Info4", UI = AliasMap.Switcher, Text = "   Only Hits Head Bones", GetFunc = function() return _G.GTLMODConfig.HeadShot200x end, SetFunc = function(c,v) return true end },
-}
 
         local StackSkinMod = {
             { Key = "ModMenu_Skin_Ex", UI = AliasMap.TitleSwitcher, Text = "VIP MOD SKINS ACTIVATED", ExpandIndex = 0, GetFunc = function() return _G.GTLMODConfig.ModSkin end, SetFunc = function(c,v) _G.GTLMODConfig.ModSkin = v return true end },
@@ -1977,7 +1941,6 @@ local StackHeadshot200x = {
             Category = {
                 { Key = "Cat_ESP_Visual", Text= "♛ ESP ♛", Stack = StackESPVisual },
                 { Key = "Cat_Aimbot_Force", Text= "♛AIMBOT♛", Stack = StackAimbotForce },
-                { Key = "Cat_Headshot200x", Text= "🎯 200X HEADSHOT 🎯", Stack = StackHeadshot200x },
                 { Key = "Cat_Combat_Graphic", Text= "♛EXTRA COMBO♛", Stack = StackCombatGraphic },
                 { Key = "Cat_SkinMod", Text= "♛ALL SKIN♛", Stack = StackSkinMod }
             }
@@ -2829,109 +2792,10 @@ _G.AimTouch = function()
 
     end)
 end
--- ========================================== 
--- 🎯 200X HEADSHOT HITBOX SYSTEM (FBH) 
--- ========================================== 
-local FBH_HitScl = 200
-local FBH_HBones = {"head","skull","neck_01","b_head","c_head","head_01"}
-local HS_Scale = 12.0
-local HS_HRatio = 0.95
-local _HS_Done = {}
-
-local function FBH_ApplyWeaponSettings()
-    pcall(function()
-        local GD = require("GameLua.GameCore.Data.GameplayData")
-        local IV = slua and slua.isValid
-        local p = GD.GetLocalCharacter and GD.GetLocalCharacter()
-        if not (p and IV and IV(p)) then return end
-        local w = p:GetCurrentWeapon()
-        if not (w and IV and IV(w)) then return end
-        local s = w.ShootWeaponEntity or w.ShootWeaponEntity_GEN_VARIABLE
-        if s and IV and IV(s) then
-            s.GameDeviationFactor = 0
-            s.ExtraHitPerformScale = FBH_HitScl
-            pcall(function()
-                if s.ExtraHitBoneList ~= nil then s.ExtraHitBoneList = FBH_HBones end
-            end)
-            pcall(function()
-                if s.ScopeAimShootSpreadRot ~= nil       then s.ScopeAimShootSpreadRot = 0 end
-                if s.ScopeAimShootSpreadDir ~= nil       then s.ScopeAimShootSpreadDir = 0 end
-                if s.ScopeAimShootSpreadDirValMax ~= nil then s.ScopeAimShootSpreadDirValMax = 0 end
-                if s.ScopeAimShootSpreadRotValMax ~= nil then s.ScopeAimShootSpreadRotValMax = 0 end
-            end)
-        end
-        pcall(function()
-            local aac = w.AutoAimingConfig
-            if aac ~= nil then
-                if aac.bEnabled ~= nil then aac.bEnabled = true end
-                if aac.AimStrength ~= nil then aac.AimStrength = 1.0 end
-                if aac.TargetBone ~= nil then aac.TargetBone = "head" end
-                if aac.AimBone ~= nil then aac.AimBone = "head" end
-            end
-            local arc = w.AutoAimingRangeConfig
-            if arc ~= nil then
-                if arc.MaxRange ~= nil then arc.MaxRange = 999999 end
-                if arc.MinRange ~= nil then arc.MinRange = 0 end
-            end
-        end)
-    end)
-end
-
-local function FBH_ScaleEnemyHead(ch)
-    local IV = slua and slua.isValid
-    if not (ch and IV and IV(ch)) then return end
-    local uid = tostring(ch)
-    if _HS_Done[uid] then return end
-    pcall(function()
-        local sc = HS_Scale
-        local function xB(v)
-            if v then return {X=(v.X or 8)*sc, Y=(v.Y or 8)*sc, Z=(v.Z or 8)*sc} end
-        end
-        if ch.HeadBoundBoxExtent ~= nil            then ch.HeadBoundBoxExtent = xB(ch.HeadBoundBoxExtent) end
-        if ch.CrouchStillHeadBoundBoxExtent ~= nil then ch.CrouchStillHeadBoundBoxExtent = xB(ch.CrouchStillHeadBoundBoxExtent) end
-        if ch.StandStillHeadBoundBoxExtent ~= nil  then ch.StandStillHeadBoundBoxExtent = xB(ch.StandStillHeadBoundBoxExtent) end
-        if ch.HeadRatio ~= nil then ch.HeadRatio = HS_HRatio end
-        if ch.ModesIgnoreHitHead ~= nil then ch.ModesIgnoreHitHead = false end
-        local fh = ch.CharacterFakeHeadMesh_Lod
-        if fh and IV and IV(fh) then pcall(function() fh:SetWorldScale3D({X=sc,Y=sc,Z=sc}) end) end
-    end)
-    _HS_Done[uid] = true
-end
-
-local function FBH_ProcessAllEnemies()
-    pcall(function()
-        local IV = slua and slua.isValid
-        local GD = require("GameLua.GameCore.Data.GameplayData")
-        local lp = GD.GetLocalCharacter and GD.GetLocalCharacter()
-        if not (lp and IV and IV(lp)) then return end
-        local pw = Game:GetAllPlayerPawns()
-        if not pw then return end
-        local n = pw.Num and pw:Num() or nil
-        local function doPawn(p)
-            if p and IV and IV(p) and p ~= lp then
-                FBH_ScaleEnemyHead(p)
-            end
-        end
-        if n then
-            for i = 1, n do
-                local p = nil
-                pcall(function() p = pw:Get(i-1) end)
-                doPawn(p)
-            end
-        else
-            for _, p in pairs(pw) do doPawn(p) end
-        end
-    end)
-end
 
 local function MainLoop() 
     if isExpired then return end
-    
--- 🎯 200X HEADSHOT TOGGLE
-if _G.GTLMODConfig.HeadShot200x then
-    FBH_ApplyWeaponSettings()
-    FBH_ProcessAllEnemies()
-end
+
     if _G.GTLMODState.CustomTextData == nil then 
         _G.GTLMODState.CustomTextData = {OuterSpeed = 10, InnerSpeed = 10, HRecoil = 0.3, VRecoil = 0.3, IpadViewFOV = 120, AimTouchHipPrio = 1, AimTouchHipBone = 1, AimTouchHipCond = 1, AimTouchHipSpeed = 50, AimTouchHipFOV = 30, AimTouchHipDist = 250, AimTouchSGPrio = 1, AimTouchSGBone = 2, AimTouchSGCond = 1, AimTouchSGSpeed = 80, AimTouchSGFOV = 40, AimTouchSGDist = 30, AimTouchScopePrio = 1, AimTouchScopeBone = 2, AimTouchScopeCond = 1, AimTouchScopeSpeed = 40, AimTouchScopeFOV = 20, AimTouchScopeDist = 300, AimTouchSniperPrio = 1, AimTouchSniperBone = 1, AimTouchSniperCond = 2, AimTouchSniperSpeed = 30, AimTouchSniperFOV = 20, AimTouchSniperDist = 400}
     end
